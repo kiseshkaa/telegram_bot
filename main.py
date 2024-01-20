@@ -92,6 +92,7 @@ def show_events(call):
     bot.send_message(call.message.chat.id, 'Мероприятия на выбранный день:', reply_markup= eventsname_markup)
 
     """print(*all_div, sep= '\n')"""
+    #нет соединения ;(
 
 while True:
     try:
