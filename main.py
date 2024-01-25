@@ -16,6 +16,28 @@ months_numbers = {'january': '01', 'february': '02', 'march': '03',
                 'autumn': '08', 'september': '09', 'october': '10',
                 'november': '11', 'december': '12'}
 
+def get_months_markup():
+    months_lists = [[], [], [], []]
+    number = 0
+    back_button = telebot.types.InlineKeyboardButton('Назад', callback_data='start')
+    for month, days in months_days.items():
+        months_lists[number // 3].append(telebot.types.InlineKeyboardButton(month, callback_data=month))
+        number += 1
+    months_markup = telebot.types.InlineKeyboardMarkup(months_lists)
+    months_markup.add(back_button)
+    return months_markup
+
+def get_days_markup(call):
+    days_lists = [[], [], [], [], [], []]
+    number = 0
+    back_button = telebot.types.InlineKeyboardButton('Назад', callback_data='months')
+    for day in range(1, months_days[call.data] + 1):
+        days_lists[number // 6].append(telebot.types.InlineKeyboardButton(day, callback_data=f'{call.data} {day}'))
+        number += 1
+    days_markup = telebot.types.InlineKeyboardMarkup(days_lists)
+    days_markup.add(back_button)
+    return days_markup
+
 @bot.message_handler(commands= ['start'])
 def start(mes : telebot.types.Message):
     cities_markup = telebot.types.InlineKeyboardMarkup()
@@ -41,31 +63,17 @@ def choose_type(call):
     period_button = telebot.types.InlineKeyboardButton('выбрать период', callback_data= 'months period')
     immdate_button = telebot.types.InlineKeyboardButton('показать ближайшие мероприятия', callback_data= 'near')
     eventtype_markup.add(data_button, period_button, immdate_button)
-    bot.send_message(call.message.chat.id, "когда вы хотите пойти?", reply_markup= eventtype_markup)
+    bot.send_message(call.message.chat.id, f"когда вы хотите пойти на мероприятие в {currant_city}?", reply_markup= eventtype_markup)
 
 @bot.callback_query_handler(lambda call: 'months' == call.data)
-def choose_months(call):
-    months_lists = [[], [], [], []]
-    number = 0
-    back_button = telebot.types.InlineKeyboardButton('Назад', callback_data='start')
-    for month, days in months_days.items():
-        months_lists[number // 3].append(telebot.types.InlineKeyboardButton(month, callback_data= month))
-        number += 1
-    months_markup = telebot.types.InlineKeyboardMarkup(months_lists)
-    months_markup.add(back_button)
-    bot.send_message(call.message.chat.id, 'Выберите месяц', reply_markup= months_markup)
+def choose_months(call : telebot.types.CallbackQuery):
+    #bot.send_message(call.message.chat.id, f'Выберите месяц для выбора даты в городе {currant_city}', reply_markup= months_markup)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.id, call.inline_message_id, reply_markup= get_months_markup())
 
 @bot.callback_query_handler(lambda call: call.data in months_days)
 def choose_day(call):
-    days_lists = [[], [], [], [], [], []]
-    number = 0
-    back_button = telebot.types.InlineKeyboardButton('Назад', callback_data= 'months')
-    for day in range(1, months_days[call.data] + 1):
-        days_lists[number // 6].append(telebot.types.InlineKeyboardButton(day, callback_data= f'{call.data} {day}'))
-        number += 1
-    days_markup = telebot.types.InlineKeyboardMarkup(days_lists)
-    days_markup.add(back_button)
-    bot.send_message(call.message.chat.id, "Выберите день: ", reply_markup= days_markup)
+    # bot.send_message(call.message.chat.id, f"Выберите день на {call.data} города {currant_city}", reply_markup= days_markup)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.id, call.inline_message_id, reply_markup= get_days_markup(call))
 
 @bot.callback_query_handler(lambda call: len(call.data.split()) == 2)
 def show_events(call):
@@ -89,7 +97,7 @@ def show_events(call):
         a = tag.find_next('a').get('href')
         eventsname_markup.add(telebot.types.InlineKeyboardButton(h2, url= f'https://afisha.yandex.ru{a}'))
     eventsname_markup.add(back_button)
-    bot.send_message(call.message.chat.id, 'Мероприятия на выбранный день:', reply_markup= eventsname_markup)
+    bot.send_message(call.message.chat.id, f'Мероприятия на {day_number}-ое {month_name} города {currant_city}', reply_markup= eventsname_markup)
 
     """print(*all_div, sep= '\n')"""
     #нет соединения ;(
