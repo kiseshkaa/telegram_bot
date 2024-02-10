@@ -6,7 +6,7 @@ from time import sleep
 bot = telebot.TeleBot('6578966055:AAGysIe59xeV7J91bMhf5dwvv30Q0VRM2uw')
 cities_dict = {'Москва': 'moscow', 'Казань': 'kazan', 'Новосибирск': 'novosibirsk'}
 currant_city = 'moscow'
-months_days = {'january': 31, 'february': 28, 'march': 31,
+months_days = {'january': 31, 'february': 29, 'march': 31,
                 'april': 30, 'may': 31, 'june': 30, 'july': 31,
                 'autumn': 31, 'september': 30, 'october': 31,
                 'november': 30, 'december': 31}
@@ -16,12 +16,13 @@ months_numbers = {'january': '01', 'february': '02', 'march': '03',
                 'autumn': '08', 'september': '09', 'october': '10',
                 'november': '11', 'december': '12'}
 
-def get_months_markup(call):
+def get_months_markup(calldata):
     months_lists = [[], [], [], []]
     number = 0
     back_button = telebot.types.InlineKeyboardButton('Назад', callback_data='start')
+    print(calldata)
     for month, days in months_days.items():
-        months_lists[number // 3].append(telebot.types.InlineKeyboardButton(month, callback_data=f'{month}|{call.data}'))
+        months_lists[number // 3].append(telebot.types.InlineKeyboardButton(month, callback_data=f'{month}|{calldata}'))
         number += 1
     months_markup = telebot.types.InlineKeyboardMarkup(months_lists)
     months_markup.add(back_button)
@@ -92,10 +93,11 @@ def choose_type(call):
 @bot.callback_query_handler(lambda call: 'months' in call.data)
 def choose_months(call : telebot.types.CallbackQuery):
     #bot.send_message(call.message.chat.id, f'Выберите месяц для выбора даты в городе {currant_city}', reply_markup= months_markup)
-    bot.edit_message_reply_markup(call.message.chat.id, call.message.id, call.inline_message_id, reply_markup= get_months_markup(call))
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.id, call.inline_message_id, reply_markup= get_months_markup(call.data))
 
 @bot.callback_query_handler(lambda call: call.data.split('|')[0] in months_days)
 def choose_day(call):
+    print(1)
     month, chose_type = call.data.split('|')
     # bot.send_message(call.message.chat.id, f"Выберите день на {call.data} города {currant_city}", reply_markup= days_markup)
     if chose_type == 'months':
@@ -109,9 +111,6 @@ def show_events(call):
     """print(*all_div, sep= '\n')"""
     #нет соединения ;(
 
-while True:
-    try:
-        bot.polling(none_stop=True)
-    except Exception as _ex:
-        print(_ex)
-        sleep(15)
+
+bot.polling(True)
+
